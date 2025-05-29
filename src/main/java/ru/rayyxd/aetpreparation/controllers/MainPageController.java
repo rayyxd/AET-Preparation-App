@@ -17,6 +17,7 @@ import ru.rayyxd.aetpreparation.dto.MainPageResponseDTO;
 import ru.rayyxd.aetpreparation.noSqlEntities.ModuleNoSQL;
 import ru.rayyxd.aetpreparation.noSqlRepositories.FinalTestNoSqlRepository;
 import ru.rayyxd.aetpreparation.noSqlRepositories.ModulesNoSQLRepository;
+import ru.rayyxd.aetpreparation.sqlEntities.FinalTest;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
 import ru.rayyxd.aetpreparation.sqlEntities.UserProgress;
 import ru.rayyxd.aetpreparation.sqlRepositories.FinalTestRepository;
@@ -66,7 +67,6 @@ public class MainPageController {
 
         return new ResponseEntity<>(dtos, HttpStatus.OK);
 	}
-	
 	@GetMapping("/main/{id}")
 	public ResponseEntity<?> getModuleById(@PathVariable int id) {
 		
@@ -77,20 +77,23 @@ public class MainPageController {
 		//return new ResponseEntity<> (modulesRepository.findById(id).orElseThrow(NoSuchElementException::new), HttpStatus.OK);
 	}
 	
+	
+	
+	
+	
 	@GetMapping("/main/{id}/test")
 	public ResponseEntity<?> getModuleTest(@PathVariable int id){
 		
 		// TODO: получать из JWT
         Long studentId = 1L;
     	
-        UserProgress userProgress = progressRepository.findByStudentIdAndModuleId(studentId, Long.valueOf(id)).orElseThrow(NoSuchElementException::new);
-		double prog = userProgress.getProgress();
-        
+        double prog = progressRepository.findByStudentIdAndModuleId(studentId, Long.valueOf(id)).orElseThrow(NoSuchElementException::new).getProgress();  
 		if(prog >=70.0) {
-			// TODO: return Actual test from mongoDB
-			//return new ResponseEntity<>(finalTestRepository.findById(id), HttpStatus.OK);
+
+			int finalTestId = finalTestRepository.findById(id).orElseThrow(NoSuchElementException::new).getId().intValue();
+			
 			System.out.println("received test");
-			return new ResponseEntity<>(finalTestNoSqlRepository.findByTestId(id),HttpStatus.OK);
+			return new ResponseEntity<>(finalTestNoSqlRepository.findByTestId(finalTestId),HttpStatus.OK);
 		
 		}
         return new ResponseEntity<>("Not enought points bozo",HttpStatus.DESTINATION_LOCKED );
