@@ -37,6 +37,9 @@ public class Student{
 	@Column(name = "verification_code_expires_at")
 	private java.time.LocalDateTime verificationCodeExpiresAt;
 	
+	@Column(name = "is_verified", nullable = false)
+	private boolean isVerified = false;
+	
 	public Long getId() {
 		return id;
 	}
@@ -61,6 +64,10 @@ public class Student{
 		return verificationCodeExpiresAt;
 	}
 	
+	public boolean isVerified() {
+		return isVerified;
+	}
+	
 	public void setId(Long id) {
 		this.id=id;
 	}
@@ -82,6 +89,10 @@ public class Student{
 	
 	public void setVerificationCodeExpiresAt(java.time.LocalDateTime verificationCodeExpiresAt) {
 		this.verificationCodeExpiresAt = verificationCodeExpiresAt;
+	}
+	
+	public void setVerified(boolean verified) {
+		isVerified = verified;
 	}
 	
 	public String toString() {
