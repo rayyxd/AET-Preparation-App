@@ -11,11 +11,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import ru.rayyxd.aetpreparation.dto.StudentLoginRequestDTO;
 import ru.rayyxd.aetpreparation.dto.AuthResponseDTO;
 import ru.rayyxd.aetpreparation.dto.StudentRegisterRequestDTO;
+import ru.rayyxd.aetpreparation.dto.VerificationRequestDTO;
+import ru.rayyxd.aetpreparation.dto.VerificationCodeRequestDTO;
 import ru.rayyxd.aetpreparation.exceptions.FieldValidationException;
 import ru.rayyxd.aetpreparation.exceptions.ForbiddenEmailException;
 import ru.rayyxd.aetpreparation.security.JwtCore;
@@ -100,6 +103,22 @@ public class SecurityController {
 		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 		
+	}
+	
+	@PostMapping("/request-verification-code")
+	public ResponseEntity<?> requestVerificationCode(@RequestBody VerificationRequestDTO request) {
+		studentService.sendVerificationCode(request.getEmail());
+		return ResponseEntity.ok("Verification code sent to email");
+	}
+
+	@PostMapping("/verify-code")
+	public ResponseEntity<?> verifyCode(@RequestBody VerificationCodeRequestDTO request) {
+		boolean result = studentService.verifyCode(request.getEmail(), request.getCode());
+		if (result) {
+			return ResponseEntity.ok("Verification successful");
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired code");
+		}
 	}
 	
 }

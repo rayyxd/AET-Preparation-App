@@ -1,12 +1,17 @@
 package ru.rayyxd.aetpreparation.services;
 
 import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Random;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.SimpleMailMessage;
 
 import jakarta.transaction.Transactional;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
@@ -28,6 +33,9 @@ public class StudentService implements UserDetailsService{
 	
 	@Autowired
 	private ModulesRepository modulesRepository;
+	
+	@Autowired
+	private JavaMailSender mailSender;
 	
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
 		Student student = studentRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
@@ -52,5 +60,42 @@ public class StudentService implements UserDetailsService{
         progressRepository.saveAll(zeroProgress);
         return saved;
 	}
+	
+	public String generateVerificationCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    public void sendVerificationCode(String email) {
+        Optional<Student> studentOpt = studentRepository.findByEmail(email);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            String code = generateVerificationCode();
+            student.setVerificationCode(code);
+            student.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+            studentRepository.save(student);
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Verification Code");
+            message.setText("Your verification code is: " + code);
+            mailSender.send(message);
+        }
+    }
+
+    public boolean verifyCode(String email, String code) {
+        Optional<Student> studentOpt = studentRepository.findByEmailAndVerificationCode(email, code);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                student.setVerificationCode(null);
+                student.setVerificationCodeExpiresAt(null);
+                studentRepository.save(student);
+                return true;
+            }
+        }
+        return false;
+    }
 	
 }

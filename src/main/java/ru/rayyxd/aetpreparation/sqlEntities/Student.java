@@ -31,6 +31,12 @@ public class Student{
 	@Column
 	private String password;
 	
+	@Column(name = "verification_code")
+	private String verificationCode;
+	
+	@Column(name = "verification_code_expires_at")
+	private java.time.LocalDateTime verificationCodeExpiresAt;
+	
 	public Long getId() {
 		return id;
 	}
@@ -47,6 +53,14 @@ public class Student{
 		return password;
 	}
 	
+	public String getVerificationCode() {
+		return verificationCode;
+	}
+	
+	public java.time.LocalDateTime getVerificationCodeExpiresAt() {
+		return verificationCodeExpiresAt;
+	}
+	
 	public void setId(Long id) {
 		this.id=id;
 	}
@@ -60,6 +74,14 @@ public class Student{
 	
 	public void setPassword(String password) {
 		this.password=password;
+	}
+	
+	public void setVerificationCode(String verificationCode) {
+		this.verificationCode = verificationCode;
+	}
+	
+	public void setVerificationCodeExpiresAt(java.time.LocalDateTime verificationCodeExpiresAt) {
+		this.verificationCodeExpiresAt = verificationCodeExpiresAt;
 	}
 	
 	public String toString() {
