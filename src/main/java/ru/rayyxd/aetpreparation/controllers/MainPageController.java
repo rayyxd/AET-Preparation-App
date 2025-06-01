@@ -11,12 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.rayyxd.aetpreparation.dto.MainPageResponseDTO;
+import ru.rayyxd.aetpreparation.exceptions.NoAuthTokenException;
 import ru.rayyxd.aetpreparation.noSqlEntities.ModuleNoSQL;
 import ru.rayyxd.aetpreparation.noSqlRepositories.FinalTestNoSqlRepository;
 import ru.rayyxd.aetpreparation.noSqlRepositories.ModulesNoSQLRepository;
+import ru.rayyxd.aetpreparation.security.JwtCore;
 import ru.rayyxd.aetpreparation.sqlEntities.FinalTest;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
 import ru.rayyxd.aetpreparation.sqlEntities.UserProgress;
@@ -44,11 +47,21 @@ public class MainPageController {
 	@Autowired 
 	private FinalTestNoSqlRepository finalTestNoSqlRepository;
 	
+	@Autowired
+	private JwtCore jwtCore;
+	
 	@GetMapping("/main")
-	public ResponseEntity<?> getModules(){
-		// TODO: получать из JWT
-        Long studentId = 1L;
+	public ResponseEntity<?> getModules(@RequestHeader("Authorization") String authHeader){
+		
+		System.out.println("entered /user");
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new NoAuthTokenException("Missing or invalid Authorization header");
+        }
 
+        String token = authHeader.substring(7);
+        
+        Long studentId = jwtCore.getUserIdFromJwt(token);
+        
         List<MainPageResponseDTO> dtos = modulesRepository.findAll().stream()
             .map(module -> {
                 double progress = progressRepository
@@ -67,14 +80,16 @@ public class MainPageController {
 
         return new ResponseEntity<>(dtos, HttpStatus.OK);
 	}
+	
+	
+	
+	
 	@GetMapping("/main/{id}")
 	public ResponseEntity<?> getModuleById(@PathVariable int id) {
 		
 		ModuleNoSQL mnsql = modulesNoSQLRepository.findByModuleId(id).orElseThrow(NoSuchElementException::new);
 		
 		return new ResponseEntity<> (modulesNoSQLRepository.findByModuleId(id).orElseThrow(NoSuchElementException::new), HttpStatus.OK);
-		
-		//return new ResponseEntity<> (modulesRepository.findById(id).orElseThrow(NoSuchElementException::new), HttpStatus.OK);
 	}
 	
 	
