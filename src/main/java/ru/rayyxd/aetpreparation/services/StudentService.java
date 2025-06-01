@@ -46,7 +46,9 @@ public class StudentService implements UserDetailsService{
 	@Transactional
     public Student registerNewStudent(Student student) {
      // 1) Сохраняем студента
+        student.setVerified(false);
         Student saved = studentRepository.save(student);
+        sendVerificationCode(student.getEmail());
 
         // 2) Берём все модули
         List<Module> modules = modulesRepository.findAll();
@@ -91,6 +93,7 @@ public class StudentService implements UserDetailsService{
             if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
                 student.setVerificationCode(null);
                 student.setVerificationCodeExpiresAt(null);
+                student.setVerified(true);
                 studentRepository.save(student);
                 return true;
             }
