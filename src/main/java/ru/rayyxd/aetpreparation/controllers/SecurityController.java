@@ -114,7 +114,7 @@ public class SecurityController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 				.body(Collections.singletonMap("message", "Account with this email does not exist"));
 		}
-		studentService.sendVerificationCode(request.getEmail());
+		studentService.sendVerificationCode(request.getEmail(), "reset");
 		return ResponseEntity.ok(Collections.singletonMap("message", "Verification code sent to email"));
 	}
 
