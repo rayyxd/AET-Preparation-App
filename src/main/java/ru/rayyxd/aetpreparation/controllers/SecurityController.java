@@ -26,6 +26,7 @@ import ru.rayyxd.aetpreparation.services.StudentService;
 import ru.rayyxd.aetpreparation.sqlEntities.Student;
 import ru.rayyxd.aetpreparation.sqlRepositories.StudentRepository;
 import java.util.Collections;
+import java.util.Optional;
 
 @RestController
 public class SecurityController {
@@ -108,8 +109,13 @@ public class SecurityController {
 	
 	@PostMapping("/request-verification-code")
 	public ResponseEntity<?> requestVerificationCode(@RequestBody VerificationRequestDTO request) {
+		Optional<Student> studentOpt = studentRepository.findByEmail(request.getEmail());
+		if (studentOpt.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(Collections.singletonMap("message", "Account with this email does not exist"));
+		}
 		studentService.sendVerificationCode(request.getEmail());
-		return ResponseEntity.ok("Verification code sent to email");
+		return ResponseEntity.ok(Collections.singletonMap("message", "Verification code sent to email"));
 	}
 
 	@PostMapping("/verify-code")
