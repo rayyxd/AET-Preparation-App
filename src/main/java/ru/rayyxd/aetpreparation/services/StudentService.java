@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import jakarta.transaction.Transactional;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
@@ -36,6 +37,9 @@ public class StudentService implements UserDetailsService{
 	
 	@Autowired
 	private JavaMailSender mailSender;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
 		Student student = studentRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
@@ -91,9 +95,22 @@ public class StudentService implements UserDetailsService{
         if (studentOpt.isPresent()) {
             Student student = studentOpt.get();
             if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                student.setVerified(true);
+                studentRepository.save(student);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean resetPassword(String email, String code, String newPassword) {
+        Optional<Student> studentOpt = studentRepository.findByEmailAndVerificationCode(email, code);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                student.setPassword(passwordEncoder.encode(newPassword));
                 student.setVerificationCode(null);
                 student.setVerificationCodeExpiresAt(null);
-                student.setVerified(true);
                 studentRepository.save(student);
                 return true;
             }

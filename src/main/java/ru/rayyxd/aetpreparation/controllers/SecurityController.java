@@ -18,12 +18,14 @@ import ru.rayyxd.aetpreparation.dto.AuthResponseDTO;
 import ru.rayyxd.aetpreparation.dto.StudentRegisterRequestDTO;
 import ru.rayyxd.aetpreparation.dto.VerificationRequestDTO;
 import ru.rayyxd.aetpreparation.dto.VerificationCodeRequestDTO;
+import ru.rayyxd.aetpreparation.dto.ResetPasswordRequestDTO;
 import ru.rayyxd.aetpreparation.exceptions.FieldValidationException;
 import ru.rayyxd.aetpreparation.exceptions.ForbiddenEmailException;
 import ru.rayyxd.aetpreparation.security.JwtCore;
 import ru.rayyxd.aetpreparation.services.StudentService;
 import ru.rayyxd.aetpreparation.sqlEntities.Student;
 import ru.rayyxd.aetpreparation.sqlRepositories.StudentRepository;
+import java.util.Collections;
 
 @RestController
 public class SecurityController {
@@ -114,9 +116,21 @@ public class SecurityController {
 	public ResponseEntity<?> verifyCode(@RequestBody VerificationCodeRequestDTO request) {
 		boolean result = studentService.verifyCode(request.getEmail(), request.getCode());
 		if (result) {
-			return ResponseEntity.ok("Verification successful");
+			return ResponseEntity.ok(Collections.singletonMap("message", "Verification successful"));
 		} else {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired code");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(Collections.singletonMap("message", "Invalid or expired code"));
+		}
+	}
+	
+	@PostMapping("/reset-password")
+	public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+		boolean result = studentService.resetPassword(request.getEmail(), request.getCode(), request.getNewPassword());
+		if (result) {
+			return ResponseEntity.ok(Collections.singletonMap("message", "Password reset successful"));
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(Collections.singletonMap("message", "Invalid or expired code"));
 		}
 	}
 	
