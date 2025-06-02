@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 import jakarta.transaction.Transactional;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
@@ -37,6 +40,9 @@ public class StudentService implements UserDetailsService{
 	@Autowired
 	private JavaMailSender mailSender;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
 		Student student = studentRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
 		return StudentDetailsImpl.build(student);
@@ -48,7 +54,7 @@ public class StudentService implements UserDetailsService{
      // 1) Сохраняем студента
         student.setVerified(false);
         Student saved = studentRepository.save(student);
-        sendVerificationCode(student.getEmail());
+        sendVerificationCode(student.getEmail(), "register");
 
         // 2) Берём все модули
         List<Module> modules = modulesRepository.findAll();
@@ -69,7 +75,7 @@ public class StudentService implements UserDetailsService{
         return String.valueOf(code);
     }
 
-    public void sendVerificationCode(String email) {
+    public void sendVerificationCode(String email, String reason) {
         Optional<Student> studentOpt = studentRepository.findByEmail(email);
         if (studentOpt.isPresent()) {
             Student student = studentOpt.get();
@@ -78,11 +84,37 @@ public class StudentService implements UserDetailsService{
             student.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
             studentRepository.save(student);
 
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("Verification Code");
-            message.setText("Your verification code is: " + code);
-            mailSender.send(message);
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+                helper.setTo(email);
+                String htmlMsg;
+                if ("register".equals(reason)) {
+                    helper.setSubject("Подтверждение регистрации на AET");
+                    htmlMsg = "<div style='font-family:sans-serif;'>" +
+                        "<h2 style='color:#4280EF;'>AET</h2>" +
+                        "<p>Здравствуйте!</p>" +
+                        "<p>Вы регистрируетесь на платформе <b>AET</b>.</p>" +
+                        "<p style='font-size:18px;'>Ваш код для подтверждения: <b style='color:#4280EF;'>" + code + "</b></p>" +
+                        "<p>Пожалуйста, введите этот код в приложении для завершения регистрации.</p>" +
+                        "<p style='color:gray;font-size:13px;'>Если вы не регистрировались, просто проигнорируйте это письмо.</p>" +
+                        "<br><p>С уважением,<br>Команда AET</p></div>";
+                } else {
+                    helper.setSubject("Восстановление пароля на AET");
+                    htmlMsg = "<div style='font-family:sans-serif;'>" +
+                        "<h2 style='color:#4280EF;'>AET</h2>" +
+                        "<p>Здравствуйте!</p>" +
+                        "<p>Вы запросили восстановление пароля для своей учётной записи на платформе <b>AET</b>.</p>" +
+                        "<p style='font-size:18px;'>Ваш код для подтверждения: <b style='color:#4280EF;'>" + code + "</b></p>" +
+                        "<p>Пожалуйста, введите этот код в приложении. Код действителен в течение 10 минут.</p>" +
+                        "<p style='color:gray;font-size:13px;'>Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>" +
+                        "<br><p>С уважением,<br>Команда AET</p></div>";
+                }
+                helper.setText(htmlMsg, true);
+                mailSender.send(mimeMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -91,9 +123,22 @@ public class StudentService implements UserDetailsService{
         if (studentOpt.isPresent()) {
             Student student = studentOpt.get();
             if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                student.setVerified(true);
+                studentRepository.save(student);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean resetPassword(String email, String code, String newPassword) {
+        Optional<Student> studentOpt = studentRepository.findByEmailAndVerificationCode(email, code);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                student.setPassword(passwordEncoder.encode(newPassword));
                 student.setVerificationCode(null);
                 student.setVerificationCodeExpiresAt(null);
-                student.setVerified(true);
                 studentRepository.save(student);
                 return true;
             }

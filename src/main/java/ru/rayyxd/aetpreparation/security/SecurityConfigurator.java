@@ -25,12 +25,6 @@ import ru.rayyxd.aetpreparation.services.StudentService;
 @EnableWebSecurity
 public class SecurityConfigurator {
 	
-	@Autowired
-	private TokenFilter tokenFilter;
-	
-	@Autowired
-	private StudentService studentService;
-	
 	public SecurityConfigurator() {}
 	
 	@Bean
@@ -42,16 +36,9 @@ public class SecurityConfigurator {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
 		return authenticationConfiguration.getAuthenticationManager();
 	}
-	 
-	@Bean
-	@Primary
-	public AuthenticationManagerBuilder configureAuthenticationManagerBuilder(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
-		authenticationManagerBuilder.userDetailsService(studentService).passwordEncoder(passwordEncoder());
-		return authenticationManagerBuilder;
-	}
 	
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+	public SecurityFilterChain filterChain(HttpSecurity http, TokenFilter tokenFilter) throws Exception{
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.cors(httpSecurityCorsConfigurer -> 
