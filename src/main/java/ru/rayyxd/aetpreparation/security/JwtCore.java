@@ -22,43 +22,23 @@ public class JwtCore {
         StudentDetailsImpl studentDetails = (StudentDetailsImpl) authentication.getPrincipal();
         
         return Jwts.builder()
-                .setSubject(studentDetails.getUsername())  // Логин как subject
-                .claim("name", studentDetails.getName())	// Имя пользователя
-                .claim("userId", studentDetails.getId())   // userId в payload
+                .setSubject(studentDetails.getId().toString())  // Логин как subject
                 .setIssuedAt(new Date())                  // Текущая дата (iat)
                 .setExpiration(new Date(System.currentTimeMillis() + lifetime))  // Срок действия
                 .signWith(SignatureAlgorithm.HS256, secret)  // Алгоритм подписи
                 .compact();
     }
     
-    // Получение username из JWT
-    public String getEmailFromJwt(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
-
     // Получение userId из JWT
     public Long getUserIdFromJwt(String token) {
-        return Jwts.parser()
+        return Long.valueOf(
+        		Jwts.parser()
                 .setSigningKey(secret)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .get("userId", Long.class);
-    }
-    
- // Получение name из JWT
-    public String getNameFromJwt(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("name", String.class);
+                .getSubject()
+                );
     }
     
     // Получение exp из JWT
