@@ -24,6 +24,7 @@ import ru.rayyxd.aetpreparation.sqlEntities.UserProgress;
 import ru.rayyxd.aetpreparation.sqlRepositories.ModulesRepository;
 import ru.rayyxd.aetpreparation.sqlRepositories.StudentRepository;
 import ru.rayyxd.aetpreparation.sqlRepositories.UserProgressRepository;
+import ru.rayyxd.aetpreparation.security.JwtCore;
 
 @Service
 public class StudentService implements UserDetailsService{
@@ -42,6 +43,9 @@ public class StudentService implements UserDetailsService{
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private JwtCore jwtCore;
 	
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
 		Student student = studentRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Email not found"));
@@ -141,6 +145,84 @@ public class StudentService implements UserDetailsService{
                 student.setVerificationCodeExpiresAt(null);
                 studentRepository.save(student);
                 return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean updateName(String token, String newName) {
+        String email = jwtCore.getEmailFromJwt(token);
+        Optional<Student> studentOpt = studentRepository.findByEmail(email);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            student.setName(newName);
+            studentRepository.save(student);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean requestEmailChange(String token, String newEmail, String password) {
+        String currentEmail = jwtCore.getEmailFromJwt(token);
+        Optional<Student> studentOpt = studentRepository.findByEmail(currentEmail);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (!passwordEncoder.matches(password, student.getPassword())) {
+                return false;
+            }
+            if (studentRepository.findByEmail(newEmail).isPresent()) {
+                return false;
+            }
+            // Сохраняем код для нового email
+            String code = generateVerificationCode();
+            student.setVerificationCode(code);
+            student.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+            studentRepository.save(student);
+            // Отправляем код на новый email
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+                helper.setTo(newEmail);
+                helper.setSubject("Подтверждение смены email на AET");
+                String htmlMsg = "<div style='font-family:sans-serif;'>" +
+                        "<h2 style='color:#4280EF;'>AET</h2>" +
+                        "<p>Здравствуйте!</p>" +
+                        "<p>Вы запросили смену email для своей учётной записи на платформе <b>AET</b>.</p>" +
+                        "<p style='font-size:18px;'>Ваш код для подтверждения: <b style='color:#4280EF;'>" + code + "</b></p>" +
+                        "<p>Пожалуйста, введите этот код в приложении. Код действителен в течение 10 минут.</p>" +
+                        "<p style='color:gray;font-size:13px;'>Если вы не запрашивали смену email, просто проигнорируйте это письмо.</p>" +
+                        "<br><p>С уважением,<br>Команда AET</p></div>";
+                helper.setText(htmlMsg, true);
+                mailSender.send(mimeMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+            // Временно сохраняем новый email в поле verificationCode (или можно добавить отдельное поле)
+            student.setVerificationCode("EMAILCHANGE:" + code + ":" + newEmail);
+            studentRepository.save(student);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean confirmEmailChange(String token, String newEmail, String code) {
+        String currentEmail = jwtCore.getEmailFromJwt(token);
+        Optional<Student> studentOpt = studentRepository.findByEmail(currentEmail);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            String stored = student.getVerificationCode();
+            if (stored != null && stored.startsWith("EMAILCHANGE:")) {
+                String[] parts = stored.split(":");
+                if (parts.length == 3 && parts[1].equals(code) && parts[2].equals(newEmail)) {
+                    if (student.getVerificationCodeExpiresAt() != null && student.getVerificationCodeExpiresAt().isAfter(LocalDateTime.now())) {
+                        student.setEmail(newEmail);
+                        student.setVerificationCode(null);
+                        student.setVerificationCodeExpiresAt(null);
+                        studentRepository.save(student);
+                        return true;
+                    }
+                }
             }
         }
         return false;
