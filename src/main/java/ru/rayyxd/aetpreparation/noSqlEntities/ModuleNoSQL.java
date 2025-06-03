@@ -76,7 +76,8 @@ public class ModuleNoSQL {
         @JsonSubTypes.Type(value = ListContent.class,      name = "list"),
         @JsonSubTypes.Type(value = QuoteContent.class,     name = "quote"),
         @JsonSubTypes.Type(value = TableContent.class,     name = "table"),
-        @JsonSubTypes.Type(value = QuizContent.class,      name = "quiz")
+        @JsonSubTypes.Type(value = QuizContent.class,      name = "quiz"),
+        @JsonSubTypes.Type(value = PictureContent.class,      name = "picture")
     })
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public static abstract class ContentItem {
@@ -355,5 +356,34 @@ public class ModuleNoSQL {
                 this.isCorrect = isCorrect;
             }
         }
+    }
+    
+    /**
+     * Блок “picture”: содержит ссылку н акартинку для отображения.
+     * JSON-структура:
+     * {
+     *   "type": "picture",
+     *   "link": "some link"
+     * }
+     */
+    
+    public static class PictureContent extends ContentItem{
+    	private String link;
+    	
+    	public void setLink(String link) {
+			this.link = link;
+		}
+    	
+    	public String getLink() {
+			return link;
+		}
+    	
+    	public PictureContent() {
+			// TODO Auto-generated constructor stub
+		}
+    	
+    	public PictureContent(String link) {
+    		this.link=link;
+    	}
     }
 }
