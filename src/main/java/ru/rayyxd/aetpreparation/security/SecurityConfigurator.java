@@ -36,7 +36,7 @@ public class SecurityConfigurator {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
 		return authenticationConfiguration.getAuthenticationManager();
 	}
-	
+	 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http, TokenFilter tokenFilter) throws Exception{
 		http
