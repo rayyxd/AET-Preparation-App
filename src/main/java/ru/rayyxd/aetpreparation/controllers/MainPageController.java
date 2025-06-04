@@ -11,10 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.rayyxd.aetpreparation.dto.MainPageResponseDTO;
+import ru.rayyxd.aetpreparation.dto.SaveModuleProgressRequest;
 import ru.rayyxd.aetpreparation.exceptions.NoAuthTokenException;
 import ru.rayyxd.aetpreparation.noSqlEntities.ModuleNoSQL;
 import ru.rayyxd.aetpreparation.noSqlRepositories.FinalTestNoSqlRepository;
@@ -48,12 +51,14 @@ public class MainPageController {
 	private FinalTestNoSqlRepository finalTestNoSqlRepository;
 	
 	@Autowired
+	private UserProgressRepository userProgressRepository;
+	
+	@Autowired
 	private JwtCore jwtCore;
 	
 	@GetMapping("/main")
 	public ResponseEntity<?> getModules(@RequestHeader("Authorization") String authHeader){
 		
-		System.out.println("entered /user");
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new NoAuthTokenException("Missing or invalid Authorization header");
         }
@@ -92,9 +97,28 @@ public class MainPageController {
 		return new ResponseEntity<> (modulesNoSQLRepository.findByModuleId(id).orElseThrow(NoSuchElementException::new), HttpStatus.OK);
 	}
 	
-	
-	
-	
+	@PostMapping("/main/saveprogress")
+	public ResponseEntity<?> saveUserProgress(@RequestHeader("Authorization") String authHeader, @RequestBody SaveModuleProgressRequest request){
+		
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new NoAuthTokenException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+		
+		Long moduleId = Long.valueOf(request.getModuleId());
+		Long studentId = jwtCore.getUserIdFromJwt(token);
+		Double progress = request.getProgress();
+		
+		UserProgress currentUserProgress = userProgressRepository.findByStudentIdAndModuleId(studentId, moduleId).orElseThrow(NoSuchElementException::new);
+		
+		if (progress <= currentUserProgress.getProgress()) {
+			return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Progress is lower than before"));
+		}else {
+			currentUserProgress.setProgress(progress);
+			userProgressRepository.save(currentUserProgress);
+			return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Progress updated successfully"));
+		}
+	}
 	
 	@GetMapping("/main/{id}/test")
 	public ResponseEntity<?> getModuleTest(@PathVariable int id){
@@ -113,5 +137,8 @@ public class MainPageController {
 		}
         return new ResponseEntity<>("Not enought points bozo",HttpStatus.DESTINATION_LOCKED );
 	}
+	
+	
+	
 	
 }
