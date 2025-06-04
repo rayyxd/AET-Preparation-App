@@ -43,7 +43,7 @@ public class ModuleService {
 	    }	
 	    
 	    List<UserProgress> progresses = allStudents.stream()
-	        .map(student -> new UserProgress(student, saved, 11.1))
+	        .map(student -> new UserProgress(student, saved, 0.0))
 	        .toList();
 	    progressRepository.saveAll(progresses);
 
