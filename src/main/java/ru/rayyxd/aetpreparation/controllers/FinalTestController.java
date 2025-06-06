@@ -31,13 +31,4 @@ public class FinalTestController {
         }
         return ResponseEntity.ok(finalTestService.save(test));
     }
-
-    @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<FinalTest>> getByUser(@PathVariable Long userId) {
-        Optional<Student> studentOpt = studentRepository.findById(userId);
-        if (studentOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(finalTestService.getByUser(studentOpt.get()));
-    }
 } 

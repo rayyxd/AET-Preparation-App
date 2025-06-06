@@ -1,9 +1,11 @@
 package ru.rayyxd.aetpreparation.services;
 
 import java.util.List;
+import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,13 +18,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
+import ru.rayyxd.aetpreparation.sqlEntities.FinalTest;
 import ru.rayyxd.aetpreparation.sqlEntities.Module;
 import ru.rayyxd.aetpreparation.sqlEntities.Student;
 import ru.rayyxd.aetpreparation.sqlEntities.StudentDetailsImpl;
 import ru.rayyxd.aetpreparation.sqlEntities.UserProgress;
+import ru.rayyxd.aetpreparation.sqlRepositories.FinalTestRepository;
 import ru.rayyxd.aetpreparation.sqlRepositories.ModulesRepository;
 import ru.rayyxd.aetpreparation.sqlRepositories.StudentRepository;
 import ru.rayyxd.aetpreparation.sqlRepositories.UserProgressRepository;
+import ru.rayyxd.aetpreparation.dto.UserGradesResponseDTO;
+import ru.rayyxd.aetpreparation.noSqlEntities.FinalTestNoSql;
+import ru.rayyxd.aetpreparation.noSqlRepositories.FinalTestNoSqlRepository;
 import ru.rayyxd.aetpreparation.security.JwtCore;
 
 @Service
@@ -37,6 +44,12 @@ public class StudentService implements UserDetailsService {
     @Autowired
     private ModulesRepository modulesRepository;
 
+    @Autowired
+    private FinalTestNoSqlRepository finalTestNoSqlRepository;
+    
+    @Autowired
+    private FinalTestRepository finalTestRepository;
+    
     @Autowired
     private JavaMailSender mailSender;
 
@@ -283,5 +296,43 @@ public class StudentService implements UserDetailsService {
             }
         }
         return false;
+    }
+    
+    public List<UserGradesResponseDTO> getUserGrades(String token) {
+        // 1) Извлекаем userId из токена
+        Long userId = jwtCore.getUserIdFromJwt(token);
+
+        // 2) Находим Student по userId
+        Student student = studentRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 3) Берём все записи FinalTest для этого пользователя
+        List<FinalTest> attempts = finalTestRepository.findAllByUser(student);
+
+        // 4) Для каждой попытки ("attempt") собираем DTO
+        return attempts.stream().map(attempt -> {
+            int testId = attempt.getTestId();
+            double scoreDouble = attempt.getScore();
+            // Приведём к int (можете изменить по своему усмотрению, например округление)
+            int grade = (int) Math.round(scoreDouble);
+
+            LocalDateTime createdAtLdt = attempt.getCreatedAt();         
+
+            // Ищем в Mongo определение самого теста
+            Optional<FinalTestNoSql> maybeNoSql = finalTestNoSqlRepository.findByTestId(testId);
+            String title = "Unknown Test";
+            int maxGrade = 0;
+
+            if (maybeNoSql.isPresent()) {
+                FinalTestNoSql testDef = maybeNoSql.get();
+                title = testDef.getTitle();
+                // Считаем, что максимальный балл = число вопросов (size списка content)
+                if (testDef.getContent() != null) {
+                    maxGrade = testDef.getContent().size();
+                }
+            }
+
+            return new UserGradesResponseDTO(title, grade, maxGrade, createdAtLdt);
+        }).collect(Collectors.toList());
     }
 }

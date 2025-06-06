@@ -1,6 +1,7 @@
 package ru.rayyxd.aetpreparation.controllers;
 
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ru.rayyxd.aetpreparation.dto.ProfileDataResponseDTO;
 import ru.rayyxd.aetpreparation.dto.UpdateProfileRequestDTO;
+import ru.rayyxd.aetpreparation.dto.UserGradesResponseDTO;
 import ru.rayyxd.aetpreparation.exceptions.NoAuthTokenException;
 import ru.rayyxd.aetpreparation.security.JwtCore;
 import ru.rayyxd.aetpreparation.services.StudentService;
@@ -95,5 +97,18 @@ public class ProfileController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Collections.singletonMap("message", "Invalid code or expired"));
         }
+    }
+    
+    @GetMapping("/user/grades")
+    public ResponseEntity<?> getGrades(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new NoAuthTokenException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+
+        // Получаем список DTO
+        List<UserGradesResponseDTO> grades = studentService.getUserGrades(token);
+
+        return new ResponseEntity<>(grades, HttpStatus.OK);
     }
 }

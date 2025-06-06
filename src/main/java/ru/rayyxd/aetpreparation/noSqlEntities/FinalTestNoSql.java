@@ -17,6 +17,8 @@ public class FinalTestNoSql {
 
     @Indexed(unique = true)
     private int testId;
+    
+    private String title;
 
     private List<Question> content;
 
@@ -36,6 +38,14 @@ public class FinalTestNoSql {
     public void setTestId(int testId) {
         this.testId = testId;
     }
+    
+    public String getTitle() {
+		return title;
+	}
+    
+    public void setTitle(String title) {
+		this.title = title;
+	}
 
     public List<Question> getContent() {
         return content;

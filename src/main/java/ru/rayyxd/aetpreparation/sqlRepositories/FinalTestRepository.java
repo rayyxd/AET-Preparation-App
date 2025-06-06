@@ -13,5 +13,6 @@ public interface FinalTestRepository extends JpaRepository<FinalTest, Long> {
 	Optional<FinalTest> findById(Long id);
 	List<FinalTest> findByTestId(int testId);
 	List<FinalTest> findByUser(Student user);
+	List<FinalTest> findAllByUser(Student user);
 
 }
