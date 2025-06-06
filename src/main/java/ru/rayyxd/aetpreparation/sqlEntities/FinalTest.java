@@ -1,29 +1,38 @@
 package ru.rayyxd.aetpreparation.sqlEntities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
+@Table(name = "final_tests")
 public class FinalTest {
-	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "testId")
 	private Long id;
 	
+	@Column(nullable = false)
+	private int testId;
 	
-	@OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "moduleId")
-    private Module module;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "student_id")
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+	private Student user;
 	
-	@Column
-	private Double passignScore;
+	@Column(nullable = false)
+	private double score;
+	
+	@Column(nullable = false)
+	private LocalDateTime createdAt;
+	
+	public FinalTest() {}
+	
+	public FinalTest(int testId, Student user, double score, LocalDateTime createdAt) {
+		this.testId = testId;
+		this.user = user;
+		this.score = score;
+		this.createdAt = createdAt;
+	}
 	
 	public Long getId() {
 		return id;
@@ -33,26 +42,35 @@ public class FinalTest {
 		this.id = id;
 	}
 	
-	public Module getModule() {
-		return module;
+	public int getTestId() {
+		return testId;
 	}
 	
-	public void setModule(Module module) {
-		this.module = module;
+	public void setTestId(int testId) {
+		this.testId = testId;
 	}
 	
-	public Double getPassignScore() {
-		return passignScore;
+	public Student getUser() {
+		return user;
 	}
 	
-	public void setPassignScore(Double passignScore) {
-		this.passignScore = passignScore;
+	public void setUser(Student user) {
+		this.user = user;
 	}
 	
-	FinalTest(Module module, Double passingScore){
-		this.module=module;
-		this.passignScore=passingScore;
+	public double getScore() {
+		return score;
 	}
 	
+	public void setScore(double score) {
+		this.score = score;
+	}
 	
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+	
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
 }
