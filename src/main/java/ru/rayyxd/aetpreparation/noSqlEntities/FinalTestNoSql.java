@@ -9,21 +9,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-
 @Document(collection = "tests")
 public class FinalTestNoSql {
 
     @Id
-    private ObjectId id; 
-    
+    private ObjectId id;
+
     @Indexed(unique = true)
     private int testId;
-    
-    @Indexed(unique = true)
-    private int moduleId;
-    
-    private List<Question> questions; 
-    
+
+    private List<Question> content;
+
     // Геттеры и сеттеры
     public ObjectId getId() {
         return id;
@@ -34,57 +30,62 @@ public class FinalTestNoSql {
     }
 
     public int getTestId() {
-		return testId;
-	}
-    
+        return testId;
+    }
+
     public void setTestId(int testId) {
-		this.testId = testId;
-	}
-    
-    public int getModuleId() {
-        return moduleId;
+        this.testId = testId;
     }
 
-    public void setModuleId(int moduleId) {
-        this.moduleId = moduleId;
+    public List<Question> getContent() {
+        return content;
     }
 
-    public List<Question> getQuestions() {
-        return questions;
+    public void setContent(List<Question> content) {
+        this.content = content;
     }
 
-    public void setContent(List<Question> questions) {
-        this.questions = questions;
-    }
-    
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public class Question {
+    public static class Question {
         private String question;
-        private String correctAnswer;
-        private List<String> additionalQuestions;
-        
+        private List<Option> options;
+
         public String getQuestion() {
-			return question;
-		}
-        
+            return question;
+        }
+
         public void setQuestion(String question) {
-			this.question = question;
-		}
-        
-        public String getCorrectAnswer() {
-			return correctAnswer;
-		}
-        
-        public void setCorrectAnswer(String correctAnswer) {
-			this.correctAnswer = correctAnswer;
-		}
-        
-        public List<String> getAdditionalQuestions() {
-			return additionalQuestions;
-		}
-        
-        public void setAdditionalQuestions(List<String> additionalQuestions) {
-			this.additionalQuestions = additionalQuestions;
-		}
+            this.question = question;
+        }
+
+        public List<Option> getOptions() {
+            return options;
+        }
+
+        public void setOptions(List<Option> options) {
+            this.options = options;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Option {
+        private String text;
+        private boolean isCorrect;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public boolean isCorrect() {
+            return isCorrect;
+        }
+
+        public void setCorrect(boolean isCorrect) {
+            this.isCorrect = isCorrect;
+        }
     }
 }
