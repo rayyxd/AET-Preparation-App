@@ -129,7 +129,7 @@ public class MainPageController {
         double prog = progressRepository.findByStudentIdAndModuleId(studentId, Long.valueOf(id)).orElseThrow(NoSuchElementException::new).getProgress();  
 		if(prog >=70.0) {
 
-			int finalTestId = finalTestRepository.findById(id).orElseThrow(NoSuchElementException::new).getId().intValue();
+			int finalTestId = finalTestRepository.findById((long) id).orElseThrow(NoSuchElementException::new).getId().intValue();
 			
 			System.out.println("received test");
 			return new ResponseEntity<>(finalTestNoSqlRepository.findByTestId(finalTestId),HttpStatus.OK);
