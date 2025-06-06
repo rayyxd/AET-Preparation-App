@@ -77,7 +77,8 @@ public class ModuleNoSQL {
         @JsonSubTypes.Type(value = QuoteContent.class,     name = "quote"),
         @JsonSubTypes.Type(value = TableContent.class,     name = "table"),
         @JsonSubTypes.Type(value = QuizContent.class,      name = "quiz"),
-        @JsonSubTypes.Type(value = PictureContent.class,      name = "picture")
+        @JsonSubTypes.Type(value = PictureContent.class,   name = "picture"),
+        @JsonSubTypes.Type(value = VideoContent.class,     name = "video")
     })
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public static abstract class ContentItem {
@@ -384,6 +385,26 @@ public class ModuleNoSQL {
     	
     	public PictureContent(String link) {
     		this.link=link;
+    	}
+    }
+    
+    public static class VideoContent extends ContentItem{
+    	private String link;
+    	
+    	public void setLink(String link) {
+			this.link = link;
+		}
+    	
+    	public String getLink() {
+			return link;
+		}
+    	
+    	public VideoContent() {
+			// TODO Auto-generated constructor stub
+		}
+    	
+    	public VideoContent(String link) {
+    		this.link = link;
     	}
     }
 }
