@@ -27,7 +27,7 @@ A robust backend API for the AET Preparation App, built with Spring Boot and Jav
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [<your-repo-url>](https://github.com/rayyxd/AET-Preparation-App)
+   git clone https://github.com/rayyxd/AET-Preparation-App
    cd aet_back
    ```
 2. Configure your database and environment variables in `src/main/resources/application.properties`.
