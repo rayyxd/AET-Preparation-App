@@ -48,63 +48,45 @@ public class SecurityController {
 		
 	@PostMapping("/login")
 	public ResponseEntity<?> signin(@RequestBody StudentLoginRequestDTO studentLoginRequestDTO){
-		Authentication authentication = null;
-	
-		// Custom Exception handling 
-//		try {
-		authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(studentLoginRequestDTO.getEmail(), studentLoginRequestDTO.getPassword()));
-//		} catch (BadCredentialsException e) {}
-
+		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(studentLoginRequestDTO.getEmail(), studentLoginRequestDTO.getPassword()));
+		Student student = studentRepository.findByEmail(studentLoginRequestDTO.getEmail()).orElseThrow();
+		if (!student.isVerified()) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(Collections.singletonMap("message", "Account not verified. Please check your email."));
+		}
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtCore.generateToken(authentication);
 		Long expiration = jwtCore.getExpFromJwt(jwt).getTime();
-		
 		AuthResponseDTO response = new AuthResponseDTO();
 		response.setToken(jwt);
 		response.setExpiration(expiration);
-		
-		
-		return new ResponseEntity<>(response, HttpStatus.OK);	
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
 	
 	@PostMapping("/register")
 	public ResponseEntity<?> signup(@Valid @RequestBody StudentRegisterRequestDTO studentRegisterRequestDTO, BindingResult bindingResult){
-		if(bindingResult.hasErrors()) { 	
+		if(bindingResult.hasErrors()) {    
 			throw new FieldValidationException(bindingResult);
 		}
-		
-		if(studentRepository.existsByEmail(studentRegisterRequestDTO.getEmail())) {
-			throw new ForbiddenEmailException("This email already exists");
+		Optional<Student> existingOpt = studentRepository.findByEmail(studentRegisterRequestDTO.getEmail());
+		if(existingOpt.isPresent()) {
+			Student existing = existingOpt.get();
+			if(existing.isVerified()) {
+				throw new ForbiddenEmailException("This email already exists and is verified");
+			} else {
+				// Update unverified user and send new code
+				studentService.updateUnverifiedStudent(existing, studentRegisterRequestDTO);
+				return ResponseEntity.ok(Collections.singletonMap("message", "Account updated. Please check your email for the verification code."));
+			}
 		}
-		
 		Student student = new Student();
-		
 		String hashed = passwordEncoder.encode(studentRegisterRequestDTO.getPassword());
-		
 		student.setName(studentRegisterRequestDTO.getName());
 		student.setEmail(studentRegisterRequestDTO.getEmail());
 		student.setPassword(hashed);
-		
 		studentService.registerNewStudent(student);
-		
-		Authentication authentication = null;
-		
-		// Custom Exception handling 
-		//try {
-		authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(student.getEmail(), studentRegisterRequestDTO.getPassword()));
-		//} catch (BadCredentialsException e) {}
-		
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		String jwt = jwtCore.generateToken(authentication);
-		Long expiration = jwtCore.getExpFromJwt(jwt).getTime();
-		
-		AuthResponseDTO response = new AuthResponseDTO();
-		response.setToken(jwt);
-		response.setExpiration(expiration);
-		
-		return new ResponseEntity<>(response, HttpStatus.OK);
-		
+		return ResponseEntity.ok(Collections.singletonMap("message", "Registration successful. Please check your email for the verification code."));
 	}
 	
 	@PostMapping("/request-verification-code")
