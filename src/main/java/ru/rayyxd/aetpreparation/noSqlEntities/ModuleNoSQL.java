@@ -369,22 +369,22 @@ public class ModuleNoSQL {
      */
     public static class PictureContent extends ContentItem{
         private String link; // S3 key only
-        
-        public void setLink(String link) {
-            this.link = link;
-        }
-        
-        public String getLink() {
-            return link;
-        }
-        
-        public PictureContent() {
-            // TODO Auto-generated constructor stub
-        }
-        
-        public PictureContent(String link) {
-            this.link=link;
-        }
+    	
+    	public void setLink(String link) {
+			this.link = link;
+		}
+    	
+    	public String getLink() {
+			return link;
+		}
+    	
+    	public PictureContent() {
+			// TODO Auto-generated constructor stub
+		}
+    	
+    	public PictureContent(String link) {
+    		this.link=link;
+    	}
     }
     
     /**
@@ -397,21 +397,21 @@ public class ModuleNoSQL {
      */
     public static class VideoContent extends ContentItem{
         private String link; // S3 key only
-        
-        public void setLink(String link) {
-            this.link = link;
-        }
-        
-        public String getLink() {
-            return link;
-        }
-        
-        public VideoContent() {
-            // TODO Auto-generated constructor stub
-        }
-        
-        public VideoContent(String link) {
-            this.link = link;
-        }
+    	
+    	public void setLink(String link) {
+			this.link = link;
+		}
+    	
+    	public String getLink() {
+			return link;
+		}
+    	
+    	public VideoContent() {
+			// TODO Auto-generated constructor stub
+		}
+    	
+    	public VideoContent(String link) {
+    		this.link = link;
+    	}
     }
 }

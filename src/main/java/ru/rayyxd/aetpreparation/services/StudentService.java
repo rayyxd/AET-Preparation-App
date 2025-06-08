@@ -211,7 +211,7 @@ public class StudentService implements UserDetailsService {
      * Запрос на смену email:
      * 1) Из JWT достаём userId
      * 2) Проверяем пароль для безопасности
-     * 3) Генерируем временный код, сохраняем его вместе с новым email в поле verificationCode как “EMAILCHANGE:<код>:<новыйEmail>”
+     * 3) Генерируем временный код, сохраняем его вместе с новым email в поле verificationCode как "EMAILCHANGE:<код>:<новыйEmail>"
      * 4) Отправляем этот код уже на новый email
      */
     public boolean requestEmailChange(String token, String newEmail, String password) {
@@ -334,5 +334,16 @@ public class StudentService implements UserDetailsService {
 
             return new UserGradesResponseDTO(title, grade, maxGrade, createdAtLdt);
         }).collect(Collectors.toList());
+    }
+
+    public void updateUnverifiedStudent(Student student, ru.rayyxd.aetpreparation.dto.StudentRegisterRequestDTO dto) {
+        student.setName(dto.getName());
+        student.setPassword(passwordEncoder.encode(dto.getPassword()));
+        // Generate new verification code and expiration
+        String code = generateVerificationCode();
+        student.setVerificationCode(code);
+        student.setVerificationCodeExpiresAt(java.time.LocalDateTime.now().plusMinutes(10));
+        studentRepository.save(student);
+        sendVerificationCode(student.getEmail(), "register");
     }
 }
