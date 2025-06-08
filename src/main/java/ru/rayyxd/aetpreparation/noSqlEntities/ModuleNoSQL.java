@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * Сущность “Модуль” для MongoDB: хранит moduleId и список полиморфных блоков “content”.
+ * Сущность "Модуль" для MongoDB: хранит moduleId и список полиморфных блоков "content".
  * В одном файле находятся все подклассы ContentItem для удобства.
  */
 @Document(collection = "modules")
@@ -59,9 +59,9 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Абстрактный базовый класс для всех типов блоков “content”.
+     * Абстрактный базовый класс для всех типов блоков "content".
      * Jackson читает поле "type" и десериализует каждый вложенный документ
-     * в соответствующий подкласс (HeadingContent, ParagraphContent и т. д.).
+     * в соответствующий подкласс (HeadingContent, ParagraphContent и т. д.).
      */
     @JsonTypeInfo(
     	    use = JsonTypeInfo.Id.NAME,
@@ -100,7 +100,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “заголовок”: содержит уровень и текст.
+     * Блок "заголовок": содержит уровень и текст.
      * JSON-структура:
      * {
      *   "type": "heading",
@@ -140,7 +140,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “параграф”: просто текст.
+     * Блок "параграф": просто текст.
      * JSON-структура:
      * {
      *   "type": "paragraph",
@@ -169,7 +169,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “список”: имеет стиль (bullet/number) и список items.
+     * Блок "список": имеет стиль (bullet/number) и список items.
      * JSON-структура:
      * {
      *   "type": "list",
@@ -209,7 +209,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “цитата”: просто текст в поле text.
+     * Блок "цитата": просто текст в поле text.
      * JSON-структура:
      * {
      *   "type": "quote",
@@ -238,7 +238,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “таблица”: содержит headers и rows.
+     * Блок "таблица": содержит headers и rows.
      * JSON-структура:
      * {
      *   "type": "table",
@@ -281,7 +281,7 @@ public class ModuleNoSQL {
     }
 
     /**
-     * Блок “quiz”: содержит вопрос и список вариантов.
+     * Блок "quiz": содержит вопрос и список вариантов.
      * JSON-структура:
      * {
      *   "type": "quiz",
@@ -360,51 +360,58 @@ public class ModuleNoSQL {
     }
     
     /**
-     * Блок “picture”: содержит ссылку н акартинку для отображения.
+     * Блок "picture": содержит ключ (key) объекта в S3 для отображения.
      * JSON-структура:
      * {
      *   "type": "picture",
-     *   "link": "some link"
+     *   "link": "module-9-quiz-picture.png" // только ключ, не полный URL
      * }
      */
-    
     public static class PictureContent extends ContentItem{
-    	private String link;
-    	
-    	public void setLink(String link) {
-			this.link = link;
-		}
-    	
-    	public String getLink() {
-			return link;
-		}
-    	
-    	public PictureContent() {
-			// TODO Auto-generated constructor stub
-		}
-    	
-    	public PictureContent(String link) {
-    		this.link=link;
-    	}
+        private String link; // S3 key only
+        
+        public void setLink(String link) {
+            this.link = link;
+        }
+        
+        public String getLink() {
+            return link;
+        }
+        
+        public PictureContent() {
+            // TODO Auto-generated constructor stub
+        }
+        
+        public PictureContent(String link) {
+            this.link=link;
+        }
     }
     
+    /**
+     * Блок "video": содержит ключ (key) объекта в S3 для отображения.
+     * JSON-структура:
+     * {
+     *   "type": "video",
+     *   "link": "module-9-logic-2.mp4" // только ключ, не полный URL
+     * }
+     */
     public static class VideoContent extends ContentItem{
-    	private String link;
-    	
-    	public void setLink(String link) {
-			this.link = link;
-		}
-    	
-    	public String getLink() {
-			return link;
-		}
-    	
-    	public VideoContent() {
-			// TODO Auto-generated constructor stub
-		}
-    	
-    	public VideoContent(String link) {
-    		this.link = link;
-    	}
+        private String link; // S3 key only
+        
+        public void setLink(String link) {
+            this.link = link;
+        }
+        
+        public String getLink() {
+            return link;
+        }
+        
+        public VideoContent() {
+            // TODO Auto-generated constructor stub
+        }
+        
+        public VideoContent(String link) {
+            this.link = link;
+        }
     }
 }

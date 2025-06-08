@@ -1,17 +1,14 @@
 package ru.rayyxd.aetpreparation.services;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-
 @Service
 public class S3Service {
-
     private final AmazonS3 amazonS3;
 
     @Value("${aws.s3.bucket}")
@@ -21,8 +18,17 @@ public class S3Service {
         this.amazonS3 = amazonS3;
     }
 
-    // Download file from S3 bucket
-    public S3Object downloadFile(String fileName) {
-        return amazonS3.getObject(bucketName, fileName);
+    // Получить метаданные (размер, content-type)
+    public ObjectMetadata getMetadata(String fileName) {
+        return amazonS3.getObjectMetadata(bucketName, fileName);
+    }
+
+    // Скачивает кусок файла по GetObjectRequest (с поддержкой Range)
+    public S3Object downloadFile(GetObjectRequest request) {
+        return amazonS3.getObject(request);
+    }
+
+    public String getBucket() {
+        return bucketName;
     }
 }
